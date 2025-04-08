@@ -1,0 +1,360 @@
+import React, { useState, useEffect } from "react";
+import { FiSearch, FiSun, FiMoon, FiX, FiFilter, FiCheckCircle, FiXCircle, FiCopy } from "react-icons/fi";
+import { FaInstagram, FaTwitter, FaFacebook, FaLinkedin, FaGithub, FaPinterest, FaSnapchat, FaTwitch, FaYoutube, FaReddit, FaTiktok, FaDiscord, FaTelegram, FaWhatsapp, FaBars, FaMedium, FaDribbble, FaBehance } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const App = () => {
+  const [username, setUsername] = useState("");
+  const [available, setAvailable] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0); // For progress bar
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [theme, setTheme] = useState("light");
+  const [showAllResults, setShowAllResults] = useState(false);
+  const [sortBy, setSortBy] = useState("default");
+  const [showAvailableOnly, setShowAvailableOnly] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === "light" ? "dark" : "light");
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value.trim();
+    if (value.length < 3) {
+      setError("Username must be at least 3 characters");
+    } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+      setError("Only letters, numbers, and underscores allowed");
+    } else {
+      setError("");
+    }
+    setUsername(value);
+  };
+
+  const clearInput = () => {
+    setUsername("");
+    setError("");
+    setAvailable([]);
+    setProgress(0);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!username || error) return;
+
+    setLoading(true);
+    setShowAllResults(false);
+    setProgress(0);
+
+    const interval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 5, 100)); // Increment progress
+    }, 100);
+
+    setTimeout(() => {
+      const filteredSites = allSites.filter(site => 
+        selectedFilter === "all" || site.type === selectedFilter
+      );
+      setAvailable(filteredSites);
+      setLoading(false);
+      clearInterval(interval);
+      setProgress(100);
+    }, 2000);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert(`Copied "${text}" to clipboard!`);
+  };
+
+  const allSites = [
+    { name: "Instagram", available: Math.random() > 0.5, logo: <FaInstagram size={40} />, type: "social" },
+    { name: "Twitter", available: Math.random() > 0.5, logo: <FaTwitter size={40} />, type: "social" },
+    { name: "Facebook", available: Math.random() > 0.5, logo: <FaFacebook size={40} />, type: "social" },
+    { name: "LinkedIn", available: Math.random() > 0.5, logo: <FaLinkedin size={40} />, type: "professional" },
+    { name: "GitHub", available: Math.random() > 0.5, logo: <FaGithub size={40} />, type: "professional" },
+    { name: "Pinterest", available: Math.random() > 0.5, logo: <FaPinterest size={40} />, type: "social" },
+    { name: "Snapchat", available: Math.random() > 0.5, logo: <FaSnapchat size={40} />, type: "social" },
+    { name: "Twitch", available: Math.random() > 0.5, logo: <FaTwitch size={40} />, type: "social" },
+    { name: "YouTube", available: Math.random() > 0.5, logo: <FaYoutube size={40} />, type: "social" },
+    { name: "Reddit", available: Math.random() > 0.5, logo: <FaReddit size={40} />, type: "social" },
+    { name: "TikTok", available: Math.random() > 0.5, logo: <FaTiktok size={40} />, type: "social" },
+    { name: "Discord", available: Math.random() > 0.5, logo: <FaDiscord size={40} />, type: "social" },
+    { name: "Telegram", available: Math.random() > 0.5, logo: <FaTelegram size={40} />, type: "social" },
+    { name: "WhatsApp", available: Math.random() > 0.5, logo: <FaWhatsapp size={40} />, type: "social" },
+    { name: "Medium", available: Math.random() > 0.5, logo: <FaMedium size={40} />, type: "professional" },
+    { name: "Dribbble", available: Math.random() > 0.5, logo: <FaDribbble size={40} />, type: "professional" },
+    { name: "Behance", available: Math.random() > 0.5, logo: <FaBehance size={40} />, type: "professional" },
+    { name: "Gmail", available: Math.random() > 0.5, logo: <FaGithub size={40} />, type: "email" },
+    { name: "Yahoo Mail", available: Math.random() > 0.5, logo: <FaGithub size={40} />, type: "email" },
+    { name: "Outlook", available: Math.random() > 0.5, logo: <FaGithub size={40} />, type: "email" },
+    { name: "example.com", available: Math.random() > 0.5, logo: <FaGithub size={40} />, type: "domain" },
+    { name: "name.com", available: Math.random() > 0.5, logo: <FaGithub size={40} />, type: "domain" },
+  ];
+
+  const SkeletonCard = () => (
+    <div className={`p-6 rounded-xl border-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} animate-pulse flex flex-col items-center justify-center space-y-4`}>
+      <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+      <div className="w-20 h-4 bg-gray-300 rounded"></div>
+      <div className="w-16 h-3 bg-gray-300 rounded"></div>
+    </div>
+  );
+
+  const sortedAndFilteredSites = [...available]
+    .filter(site => !showAvailableOnly || site.available)
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "availability") return Number(b.available) - Number(a.available);
+      return 0;
+    });
+
+  return (
+    <div className={`min-h-screen flex flex-col items-center transition-colors duration-300 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} font-sans`}>
+      {/* Landing Page Section */}
+      <section className={`w-full ${theme === 'dark' ? 'bg-gradient-to-r from-blue-800 to-indigo-900' : 'bg-gradient-to-r from-blue-500 to-indigo-600'} text-white py-16 text-center`}>
+        <h1 className="text-5xl font-extrabold mb-4 tracking-tight">Find Your Perfect Username</h1>
+        <p className="text-xl mb-8 opacity-90">Check availability across 20+ platforms instantly!</p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => document.getElementById('username-form').scrollIntoView()}
+          className={`${theme === 'dark' ? 'bg-yellow-400' : 'bg-yellow-500'} text-black py-3 px-8 rounded-full text-lg font-semibold hover:bg-yellow-400 transition-all duration-200 shadow-md`}
+        >
+          Start Checking
+        </motion.button>
+      </section>
+
+      {/* Navigation Bar */}
+      <nav className={`w-full ${theme === 'dark' ? 'bg-blue-800/95' : 'bg-blue-500/95'} text-white py-2 px-4 flex justify-between items-center fixed top-0 left-0 z-50 shadow-sm backdrop-blur-sm`}>
+        <div className="text-2xl font-semibold tracking-tight">Username Checker</div>
+        <div className="flex items-center space-x-3">
+          <motion.button 
+            whileHover={{ scale: 1.1 }} 
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme} 
+            className="p-1 rounded-full hover:bg-blue-600/50 transition-colors duration-200" 
+            aria-label="Toggle theme"
+          >
+            <motion.div
+              initial={{ rotate: 0 }}
+              animate={{ rotate: theme === "light" ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
+            >
+              {theme === "light" ? <FiMoon size={20} /> : <FiSun size={20} />}
+            </motion.div>
+          </motion.button>
+          <button className="lg:hidden" onClick={() => setIsNavOpen(!isNavOpen)}>
+            <FaBars size={24} />
+          </button>
+          {isNavOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`lg:hidden absolute top-12 right-0 ${theme === 'dark' ? 'bg-blue-800' : 'bg-blue-500'} w-40 p-3 rounded-md shadow-md`}
+            >
+              <a href="#home" className="block py-1 text-sm hover:underline">Home</a>
+              <a href="#account" className="block py-1 text-sm hover:underline">Account</a>
+              <a href="#help" className="block py-1 text-sm hover:underline">Help</a>
+            </motion.div>
+          )}
+          <div className="hidden lg:flex space-x-4 text-base">
+            <a href="#home" className="relative py-1 hover:text-gray-200 after:content-[''] after:absolute after:w-full after:h-[2px] after:bg-white after:left-0 after:bottom-0 after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100">Home</a>
+            <a href="#account" className="relative py-1 hover:text-gray-200 after:content-[''] after:absolute after:w-full after:h-[2px] after:bg-white after:left-0 after:bottom-0 after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100">Account</a>
+            <a href="#help" className="relative py-1 hover:text-gray-200 after:content-[''] after:absolute after:w-full after:h-[2px] after:bg-white after:left-0 after:bottom-0 after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100">Help</a>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="pt-16 w-full max-w-7xl px-4">
+        <form id="username-form" className="w-full flex flex-col items-center mt-12" onSubmit={handleSubmit}>
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-4 mb-6 w-full max-w-5xl">
+            {/* Enhanced Input Field */}
+            <div className="relative w-full max-w-lg group">
+              <div className={`absolute inset-0 bg-gradient-to-r ${theme === 'dark' ? 'from-blue-600/20 to-indigo-600/20' : 'from-blue-200/20 to-indigo-200/20'} rounded-xl blur-md group-hover:blur-lg transition-all duration-300`}></div>
+              <input
+                type="text"
+                className={`relative w-full p-4 pl-12 rounded-xl text-xl border-2 ${error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-sm`}
+                placeholder=" "
+                value={username}
+                onChange={handleInputChange}
+                aria-label="Username input"
+              />
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <label className={`absolute left-12 top-1/2 transform -translate-y-1/2 text-gray-500 transition-all duration-200 ${username ? 'top-2 text-xs -translate-y-0' : ''}`}>
+                Enter a username
+              </label>
+              {username && (
+                <button
+                  type="button"
+                  onClick={clearInput}
+                  className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+                >
+                  <FiX size={20} />
+                </button>
+              )}
+              <button 
+                type="submit" 
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 ${theme === 'dark' ? 'bg-blue-700' : 'bg-blue-500'} text-white p-2 rounded-md flex items-center disabled:bg-gray-400 hover:bg-blue-600 transition-all duration-200`}
+                disabled={loading || error}
+              >
+                <FiSearch size={24} />
+              </button>
+            </div>
+
+            {/* Platform Type Dropdown */}
+            <div className="flex items-center gap-2">
+              <select
+                className={`border-2 p-2 rounded-lg text-base ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                value={selectedFilter}
+                onChange={(e) => setSelectedFilter(e.target.value)}
+              >
+                <option value="all">All Platforms</option>
+                <option value="social">Social Media</option>
+                <option value="professional">Professional</option>
+                <option value="email">Email</option>
+                <option value="domain">Domains</option>
+              </select>
+            </div>
+
+            {/* Filter/Sort Section */}
+            {available.length > 0 && !loading && (
+              <div className={`flex items-center gap-4 p-4 rounded-xl ${theme === 'dark' ? 'bg-gray-800/80' : 'bg-gray-100/80'} shadow-lg backdrop-blur-sm border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className="flex items-center gap-2">
+                  <FiFilter size={20} className="text-gray-500" />
+                  <select
+                    className={`border-2 p-2 rounded-lg text-base ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-black border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="default">Sort: Default</option>
+                    <option value="name">Sort: Alphabetical</option>
+                    <option value="availability">Sort: Availability</option>
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 text-base">
+                  <input
+                    type="checkbox"
+                    checked={showAvailableOnly}
+                    onChange={() => setShowAvailableOnly(!showAvailableOnly)}
+                    className="w-4 h-4 accent-blue-500 rounded"
+                  />
+                  <span>Available Only</span>
+                </label>
+              </div>
+            )}
+          </div>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {loading && (
+            <div className="w-full max-w-lg mt-2">
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-blue-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.1 }}
+                />
+              </div>
+            </div>
+          )}
+        </form>
+
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 w-full mt-8">
+            {Array(6).fill().map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : (
+          <AnimatePresence>
+            {available.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="w-full"
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 w-full mt-8">
+                  {sortedAndFilteredSites.slice(0, showAllResults ? sortedAndFilteredSites.length : 6).map((site, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className={`relative p-4 rounded-xl border-2 shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-lg group ${
+                        site.available 
+                          ? `${theme === 'dark' ? 'bg-gradient-to-br from-green-600 to-green-800' : 'bg-gradient-to-br from-green-50 to-green-100'} border-green-400` 
+                          : `${theme === 'dark' ? 'bg-gradient-to-br from-red-600 to-red-800' : 'bg-gradient-to-br from-red-50 to-red-100'} border-red-400`
+                      } flex flex-col items-center justify-between space-y-3 text-center`}
+                    >
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20">
+                        {site.logo}
+                      </div>
+                      <div>
+                        <h2 className="text-base font-semibold truncate max-w-[120px]">{site.name}</h2>
+                        <p className="text-sm flex items-center justify-center gap-1">
+                          {site.available ? (
+                            <FiCheckCircle className="text-green-400" size={16} />
+                          ) : (
+                            <FiXCircle className="text-red-400" size={16} />
+                          )}
+                          {site.available ? "Available" : "Taken"}
+                        </p>
+                      </div>
+                      {site.available && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => copyToClipboard(username)}
+                          className="absolute top-2 right-2 p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                          <FiCopy size={16} />
+                        </motion.button>
+                      )}
+                      {/* Tooltip */}
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        {site.type.charAt(0).toUpperCase() + site.type.slice(1)}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                {sortedAndFilteredSites.length > 6 && (
+                  <div className="flex justify-center mt-6">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowAllResults(!showAllResults)}
+                      className={`${theme === 'dark' ? 'bg-blue-700 hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600'} text-white py-3 px-8 rounded-full transition-all duration-200 shadow-md`}
+                    >
+                      {showAllResults ? "Show Less" : "Show More"}
+                    </motion.button>
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              !loading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-12 text-center"
+                >
+                  <h2 className="text-2xl font-semibold mb-2">No Results Yet</h2>
+                  <p className="text-gray-500 dark:text-gray-400">Enter a username above to check availability across platforms!</p>
+                </motion.div>
+              )
+            )}
+          </AnimatePresence>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default App;
